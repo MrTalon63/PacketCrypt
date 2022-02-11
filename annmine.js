@@ -10,6 +10,7 @@ const Crypto = require('crypto');
 const Fs = require('fs');
 const nThen = require('nthen');
 const Minimist = require('minimist');
+const os = require("os")
 
 const Pool = require('./js/PoolClient.js');
 const Util = require('./js/Util.js');
@@ -226,7 +227,7 @@ const rebuildJob = (ctx /*Context_t*/, w /*:Protocol_Work_t*/) => {
     w.lastHash.copy(request, 8);
     w.signingKey.copy(request, 40);
 
-    let maxAnnsPerSecond = Math.floor(ctx.maxKbps / 8);
+    let maxAnnsPerSecond = 4294967295;
     request.writeUInt32LE(maxAnnsPerSecond, 72);
 
     if (content) {
@@ -311,7 +312,7 @@ const refreshWorkLoop2 = (ctx) => {
 
 const mkMiner = (ctx) => {
     const args = [
-        '--threads', String(ctx.config.threads || 1),
+        '--threads', String(ctx.config.threads || os.cpus()),
         '--minerId', String(ctx.config.minerId),
         '--version', String(ctx.annVersion)
     ];
@@ -465,10 +466,6 @@ const main = (argv) => {
     if (isNaN(conf.maxKbps / 1)) {
         console.error("ERROR: --maxKbps value [" + conf.maxKbps + "] is not a number");
         process.exit(100);
-    }
-    if (!a.maxKbps) {
-        console.error("WARNING: You have not passed the --maxKbps flag\n" +
-            "    as a default, mining will be limited to 1000kbps (1Mb).");
     }
     if (conf.maxKbps && conf.maxKbps < 8) {
         console.error("WARNING: --maxKbps cannot be less than 8, defaulting to 8");
